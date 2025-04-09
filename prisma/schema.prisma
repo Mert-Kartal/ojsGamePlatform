@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Kullanıcı modeli
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  email        String    @unique
+  password     String
+  name         String?
+  profileImage String?
+  isAdmin      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  // İlişkiler
+  library   Library[]
+  reviews   Review[]
+  friends   Friendship[] @relation("userFriends")
+  friendsOf Friendship[] @relation("friendsOfUser")
+  wishlist  Wishlist[]
+}
+
+// Oyun modeli
+model Game {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String    @db.Text
+  price       Float
+  releaseDate DateTime
+  developer   String
+  publisher   String
+  coverImage  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  // İlişkiler
+  categories CategoryOnGame[]
+  library    Library[]
+  reviews    Review[]
+  wishlist   Wishlist[]
+}
+
+// Kategori modeli
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  games CategoryOnGame[]
+}
+
+// Oyun-Kategori ilişki modeli
+model CategoryOnGame {
+  gameId     Int
+  categoryId Int
+
+  game     Game     @relation(fields: [gameId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([gameId, categoryId])
+}
+
+// Kütüphane modeli
+model Library {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  gameId     Int
+  addedAt    DateTime  @default(now())
+  lastPlayed DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
+// İnceleme modeli
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  gameId    Int
+  content   String   @db.Text
+  rating    Int      @db.SmallInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // İlişkiler
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
+// Arkadaşlık modeli
+model Friendship {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  friendId  Int
+  status    FriendshipStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+
+  user   User @relation("userFriends", fields: [userId], references: [id])
+  friend User @relation("friendsOfUser", fields: [friendId], references: [id])
+
+  @@unique([userId, friendId])
+}
+
+// İstek listesi modeli
+model Wishlist {
+  id      Int      @id @default(autoincrement())
+  userId  Int
+  gameId  Int
+  addedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([userId, gameId])
+}
+
+// Enum tanımlamaları
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
