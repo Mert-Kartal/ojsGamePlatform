@@ -1,27 +1,7 @@
 import { Request, Response } from "express";
 import FriendshipModel from "./friendship.model";
-import {
-  friendshipCreateSchema,
-  friendshipIdSchema,
-  friendshipStatusSchema,
-} from "src/validation/friendship.validation";
-import {
-  CreateFriendshipDTO,
-  UpdateFriendshipStatusDTO,
-} from "src/DTO/friendship.dto";
-import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-
-interface AuthRequest<P = {}, ResBody = any, ReqBody = any>
-  extends Request<P, ResBody, ReqBody> {
-  user?: {
-    id: number;
-  };
-}
-
-interface FriendshipParams {
-  id: string;
-}
+import AuthRequest from "src/types/auth.types";
 
 export default class FriendshipController {
   static async getFriends(req: AuthRequest, res: Response) {
@@ -32,6 +12,10 @@ export default class FriendshipController {
       }
 
       const friends = await FriendshipModel.getFriendships(req.user.id);
+      if (friends.length === 0) {
+        res.status(404).json({ error: "No friends found" });
+        return;
+      }
       res.status(200).json(friends);
     } catch (error) {
       console.error("Get friends error:", error);
@@ -49,6 +33,10 @@ export default class FriendshipController {
       }
 
       const requests = await FriendshipModel.getPendingRequests(req.user.id);
+      if (requests.length === 0) {
+        res.status(404).json({ error: "No pending friend requests found" });
+        return;
+      }
       res.status(200).json(requests);
     } catch (error) {
       console.error("Get pending requests error:", error);
@@ -66,6 +54,10 @@ export default class FriendshipController {
       }
 
       const requests = await FriendshipModel.getSentRequests(req.user.id);
+      if (requests.length === 0) {
+        res.status(404).json({ error: "No sent friend requests found" });
+        return;
+      }
       res.status(200).json(requests);
     } catch (error) {
       console.error("Get sent requests error:", error);
@@ -92,10 +84,7 @@ export default class FriendshipController {
     }
   }
 
-  static async sendFriendRequest(
-    req: AuthRequest<{}, {}, CreateFriendshipDTO>,
-    res: Response
-  ) {
+  static async sendFriendRequest(req: AuthRequest, res: Response) {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Unauthorized" });
@@ -109,17 +98,9 @@ export default class FriendshipController {
         return;
       }
 
-      const validatedData = friendshipCreateSchema.parse(req.body);
-      const friendship = await FriendshipModel.create(
-        req.user.id,
-        validatedData
-      );
+      const friendship = await FriendshipModel.create(req.user.id, req.body);
       res.status(201).json(friendship);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "Friendship already exists") {
           res.status(409).json({ error: error.message });
@@ -137,30 +118,21 @@ export default class FriendshipController {
     }
   }
 
-  static async updateFriendshipStatus(
-    req: AuthRequest<FriendshipParams, {}, UpdateFriendshipStatusDTO>,
-    res: Response
-  ) {
+  static async updateFriendshipStatus(req: AuthRequest, res: Response) {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Unauthorized" });
         return;
       }
 
-      const { id } = friendshipIdSchema.parse({ id: parseInt(req.params.id) });
-      const validatedData = friendshipStatusSchema.parse(req.body);
-
+      const id = parseInt(req.params.id);
       const friendship = await FriendshipModel.updateStatus(
         id,
         req.user.id,
-        validatedData
+        req.body
       );
       res.status(200).json(friendship);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res
@@ -176,24 +148,17 @@ export default class FriendshipController {
     }
   }
 
-  static async removeFriendship(
-    req: AuthRequest<FriendshipParams>,
-    res: Response
-  ) {
+  static async removeFriendship(req: AuthRequest, res: Response) {
     try {
       if (!req.user) {
         res.status(401).json({ error: "Unauthorized" });
         return;
       }
 
-      const { id } = friendshipIdSchema.parse({ id: parseInt(req.params.id) });
+      const id = parseInt(req.params.id);
       await FriendshipModel.delete(id, req.user.id);
       res.status(200).json({ message: "Friendship removed successfully" });
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res

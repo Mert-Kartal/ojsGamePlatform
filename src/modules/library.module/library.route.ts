@@ -1,6 +1,11 @@
 import { Router } from "express";
 import LibraryController from "./library.controller";
 import AuthMiddleware from "src/middleware/auth.middleware";
+import { validator } from "src/middleware/validator.middleware";
+import {
+  libraryAddGameSchema,
+  libraryUpdateSchema,
+} from "./library.validation";
 
 const router = Router();
 
@@ -8,8 +13,16 @@ const router = Router();
 router.use(AuthMiddleware.authenticate);
 
 router.get("/", LibraryController.getUserLibrary);
-router.post("/add/game/:gameId", LibraryController.addGameToLibrary);
-router.patch("/:gameId/last-played", LibraryController.updateLastPlayed);
+router.post(
+  "/add/game/:gameId",
+  validator({ body: libraryAddGameSchema }),
+  LibraryController.addGameToLibrary
+);
+router.patch(
+  "/:gameId/last-played",
+  validator({ body: libraryUpdateSchema }),
+  LibraryController.updateLastPlayed
+);
 router.delete("/:gameId", LibraryController.removeGameFromLibrary);
 router.get("/:gameId/check", LibraryController.checkGameInLibrary);
 

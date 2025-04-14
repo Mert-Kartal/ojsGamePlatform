@@ -135,3 +135,13 @@ enum FriendshipStatus {
   ACCEPTED
   BLOCKED
 }
+
+/**
+ * front
+ * email
+ * form validation req query library
+ * cron
+ * validation middleware var 2 param(query,body) zod schema al,
+ */
+
+//sepet email ile giriş ve bildirim

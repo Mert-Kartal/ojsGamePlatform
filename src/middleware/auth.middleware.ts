@@ -5,7 +5,7 @@ import {
   tokenSchema,
   registerSchema,
   loginSchema,
-} from "src/validation/auth.validation";
+} from "src/modules/auth.module/auth.validation";
 import { ZodError } from "zod";
 import UserModel from "src/modules/user.module/user.model";
 

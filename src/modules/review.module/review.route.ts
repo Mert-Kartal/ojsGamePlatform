@@ -1,6 +1,8 @@
 import { Router } from "express";
 import ReviewController from "./review.controller";
 import AuthMiddleware from "src/middleware/auth.middleware";
+import { validator } from "src/middleware/validator.middleware";
+import { reviewCreateSchema, reviewUpdateSchema } from "./review.validation";
 
 const router = Router();
 
@@ -13,8 +15,16 @@ router.get("/game/:gameId/rating", ReviewController.getGameAverageRating);
 // Protected routes - require authentication
 router.use(AuthMiddleware.authenticate);
 router.get("/user/me", ReviewController.getUserReviews);
-router.post("/", ReviewController.create);
-router.patch("/:id", ReviewController.update);
+router.post(
+  "/",
+  validator({ body: reviewCreateSchema }),
+  ReviewController.create
+);
+router.patch(
+  "/:id",
+  validator({ body: reviewUpdateSchema }),
+  ReviewController.update
+);
 router.delete("/:id", ReviewController.delete);
 
 // Admin routes

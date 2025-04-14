@@ -1,20 +1,7 @@
 import { Request, Response } from "express";
 import ReviewModel from "./review.model";
-import {
-  reviewCreateSchema,
-  reviewUpdateSchema,
-  reviewIdSchema,
-} from "src/validation/review.validation";
-import { CreateReviewDTO, UpdateReviewDTO } from "src/DTO/review.dto";
-import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
-
-interface AuthRequest<P = {}, ResBody = any, ReqBody = any>
-  extends Request<P, ResBody, ReqBody> {
-  user?: {
-    id: number;
-  };
-}
+import AuthRequest from "src/types/auth.types";
 
 interface ReviewParams {
   id: string;
@@ -28,6 +15,10 @@ export default class ReviewController {
   static async getAll(req: Request, res: Response) {
     try {
       const reviews = await ReviewModel.getAll();
+      if (reviews.length === 0) {
+        res.status(404).json({ error: "No reviews found" });
+        return;
+      }
       res.status(200).json(reviews);
     } catch (error) {
       console.error("Get all reviews error:", error);
@@ -39,7 +30,7 @@ export default class ReviewController {
 
   static async getById(req: Request<ReviewParams>, res: Response) {
     try {
-      const { id } = reviewIdSchema.parse({ id: parseInt(req.params.id) });
+      const id = parseInt(req.params.id);
       const review = await ReviewModel.getById(id);
 
       if (!review) {
@@ -49,10 +40,6 @@ export default class ReviewController {
 
       res.status(200).json(review);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       console.error("Get review by id error:", error);
       res
         .status(500)
@@ -69,6 +56,10 @@ export default class ReviewController {
       }
 
       const reviews = await ReviewModel.getByGameId(gameId);
+      if (reviews.length === 0) {
+        res.status(404).json({ error: "No reviews found for this game" });
+        return;
+      }
       res.status(200).json(reviews);
     } catch (error) {
       console.error("Get reviews by game id error:", error);
@@ -95,24 +86,16 @@ export default class ReviewController {
     }
   }
 
-  static async create(
-    req: AuthRequest<{}, {}, CreateReviewDTO>,
-    res: Response
-  ) {
+  static async create(req: AuthRequest, res: Response) {
     try {
       if (!req.user) {
         res.status(401).json({ error: "User not authenticated" });
         return;
       }
 
-      const validatedData = reviewCreateSchema.parse(req.body);
-      const review = await ReviewModel.create(req.user.id, validatedData);
+      const review = await ReviewModel.create(req.user.id, req.body);
       res.status(201).json(review);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "User has already reviewed this game") {
           res.status(409).json({ error: error.message });
@@ -130,26 +113,17 @@ export default class ReviewController {
     }
   }
 
-  static async update(
-    req: AuthRequest<ReviewParams, {}, UpdateReviewDTO>,
-    res: Response
-  ) {
+  static async update(req: AuthRequest, res: Response) {
     try {
       if (!req.user) {
         res.status(401).json({ error: "User not authenticated" });
         return;
       }
 
-      const { id } = reviewIdSchema.parse({ id: parseInt(req.params.id) });
-      const validatedData = reviewUpdateSchema.parse(req.body);
-
-      const review = await ReviewModel.update(id, req.user.id, validatedData);
+      const id = parseInt(req.params.id);
+      const review = await ReviewModel.update(id, req.user.id, req.body);
       res.status(200).json(review);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res.status(404).json({ error: "Review not found or unauthorized" });
@@ -163,21 +137,17 @@ export default class ReviewController {
     }
   }
 
-  static async delete(req: AuthRequest<ReviewParams>, res: Response) {
+  static async delete(req: AuthRequest, res: Response) {
     try {
       if (!req.user) {
         res.status(401).json({ error: "User not authenticated" });
         return;
       }
 
-      const { id } = reviewIdSchema.parse({ id: parseInt(req.params.id) });
+      const id = parseInt(req.params.id);
       await ReviewModel.delete(id, req.user.id);
       res.status(200).json({ message: "Review deleted successfully" });
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res.status(404).json({ error: "Review not found or unauthorized" });
@@ -205,7 +175,7 @@ export default class ReviewController {
       console.error("Get game average rating error:", error);
       res
         .status(500)
-        .json({ error: "Something went wrong while fetching rating" });
+        .json({ error: "Something went wrong while getting game rating" });
     }
   }
 }

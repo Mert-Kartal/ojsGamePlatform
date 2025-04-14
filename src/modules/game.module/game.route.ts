@@ -2,6 +2,8 @@ import { Router } from "express";
 import GameController from "./game.controller";
 import AuthMiddleware from "src/middleware/auth.middleware";
 import { upload } from "../../middleware/upload.middleware";
+import { validator } from "src/middleware/validator.middleware";
+import { gameCreateSchema, gameUpdateSchema } from "./game.validation";
 
 const router = Router();
 
@@ -14,8 +16,16 @@ router.get("/:id", GameController.getById);
 
 // Admin only routes
 router.use("/admin", AuthMiddleware.authenticate, AuthMiddleware.isAdmin);
-router.post("/admin", GameController.create);
-router.patch("/admin/:id", GameController.update);
+router.post(
+  "/admin",
+  validator({ body: gameCreateSchema }),
+  GameController.create
+);
+router.patch(
+  "/admin/:id",
+  validator({ body: gameUpdateSchema }),
+  GameController.update
+);
 router.delete("/admin/:id", GameController.delete);
 
 // Cover image routes (admin only)

@@ -42,7 +42,7 @@ const fileFilter = (
   if (mimetype && extname) {
     return cb(null, true);
   }
-  cb(new Error("Sadece jpg, jpeg veya png dosyaları yüklenebilir"));
+  cb(new Error("Only jpg, jpeg or png files can upload"));
 };
 
 export const upload = multer({ storage, fileFilter });

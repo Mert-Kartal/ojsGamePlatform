@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import WishlistModel from "./wishlist.model";
-import {
-  wishlistGameIdSchema,
-  wishlistUserIdSchema,
-} from "src/validation/wishlist.validation";
-import { ZodError } from "zod";
-import { AuthRequest } from "src/types/auth.types";
+import AuthRequest from "src/types/auth.types";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export default class WishlistController {
@@ -17,9 +12,7 @@ export default class WishlistController {
         return;
       }
 
-      const { gameId } = wishlistGameIdSchema.parse({
-        gameId: parseInt(req.params.gameId),
-      });
+      const gameId = parseInt(req.params.gameId);
       const wishlistItem = await WishlistModel.addToWishlist(userId, gameId);
 
       res.status(201).json({
@@ -30,10 +23,6 @@ export default class WishlistController {
         },
       });
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "Game is already in wishlist") {
           res.status(409).json({ error: error.message });
@@ -59,9 +48,7 @@ export default class WishlistController {
         return;
       }
 
-      const { gameId } = wishlistGameIdSchema.parse({
-        gameId: parseInt(req.params.gameId),
-      });
+      const gameId = parseInt(req.params.gameId);
       const wishlistItem = await WishlistModel.removeFromWishlist(
         userId,
         gameId
@@ -75,10 +62,6 @@ export default class WishlistController {
         },
       });
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res.status(404).json({ error: "Game not found" });
@@ -113,9 +96,7 @@ export default class WishlistController {
 
   static async getUserWishlist(req: Request, res: Response) {
     try {
-      const { userId } = wishlistUserIdSchema.parse({
-        userId: parseInt(req.params.userId),
-      });
+      const userId = parseInt(req.params.userId);
       const wishlist = await WishlistModel.getUserWishlist(userId);
 
       if (!wishlist) {
@@ -125,10 +106,6 @@ export default class WishlistController {
 
       res.status(200).json(wishlist);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       console.error("Get user wishlist error:", error);
       res
         .status(500)

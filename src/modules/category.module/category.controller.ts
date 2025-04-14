@@ -4,15 +4,15 @@ import {
   categoryCreateSchema,
   categoryUpdateSchema,
   categoryIdSchema,
-} from "src/validation/category.validation";
+  CategoryCreateType,
+} from "src/modules/category.module/category.validation";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export default class CategoryController {
-  static async create(req: Request<{}, {}, { name: string }>, res: Response) {
+  static async create(req: Request<{}, {}, CategoryCreateType>, res: Response) {
     try {
-      const validatedData = categoryCreateSchema.parse(req.body);
-      const createdCategory = await CategoryModel.create(validatedData);
+      const createdCategory = await CategoryModel.create(req.body);
       res.status(201).json(createdCategory);
     } catch (error) {
       if (error instanceof ZodError) {
@@ -35,6 +35,10 @@ export default class CategoryController {
   static async listAll(req: Request, res: Response) {
     try {
       const allCategories = await CategoryModel.getAll();
+      if (allCategories.length === 0) {
+        res.status(404).json({ error: "No categories found" });
+        return;
+      }
       res.status(200).json(allCategories);
     } catch (error) {
       console.error("List all categories error:", error);
@@ -81,9 +85,8 @@ export default class CategoryController {
         res.status(400).json({ error: "id required" });
         return;
       }
-      const validatedData = categoryUpdateSchema.parse(req.body);
 
-      const updatedCategory = await CategoryModel.update(+id, validatedData);
+      const updatedCategory = await CategoryModel.update(+id, req.body);
       if (!updatedCategory) {
         res.status(404).json({ error: "Category not found" });
         return;

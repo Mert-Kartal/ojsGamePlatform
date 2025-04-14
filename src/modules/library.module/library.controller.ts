@@ -1,15 +1,10 @@
 import { Request, Response } from "express";
 import LibraryModel from "./library.model";
-import { libraryAddGameSchema } from "src/validation/library.validation";
-import { AddGameToLibraryDTO } from "src/DTO/library.dto";
+import { libraryAddGameSchema } from "src/modules/library.module/library.validation";
 import { ZodError } from "zod";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
-interface AuthRequest extends Request {
-  user?: {
-    id: number;
-  };
-}
+import AuthRequest from "src/types/auth.types";
 
 export default class LibraryController {
   static async getUserLibrary(req: AuthRequest, res: Response) {

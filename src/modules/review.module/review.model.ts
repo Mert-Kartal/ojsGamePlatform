@@ -3,7 +3,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import {
   CreateReviewInput,
   UpdateReviewInput,
-} from "src/validation/review.validation";
+} from "src/modules/review.module/review.validation";
 
 export default class ReviewModel {
   static async getAll() {

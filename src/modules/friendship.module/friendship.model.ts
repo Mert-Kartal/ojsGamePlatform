@@ -3,7 +3,7 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import {
   CreateFriendshipInput,
   UpdateFriendshipStatusInput,
-} from "src/validation/friendship.validation";
+} from "src/modules/friendship.module/friendship.validation";
 
 export default class FriendshipModel {
   static async getFriendships(userId: number) {
