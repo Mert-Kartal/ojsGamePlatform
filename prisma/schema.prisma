@@ -29,6 +29,7 @@ model User {
   friends   Friendship[] @relation("userFriends")
   friendsOf Friendship[] @relation("friendsOfUser")
   wishlist  Wishlist[]
+  cart      Cart? // Bir kullanıcının tek bir aktif sepeti olabilir
 }
 
 // Oyun modeli
@@ -50,6 +51,7 @@ model Game {
   library    Library[]
   reviews    Review[]
   wishlist   Wishlist[]
+  cartItems  GameItem[] // Sepet öğeleri ilişkisi
 }
 
 // Kategori modeli
@@ -136,12 +138,41 @@ enum FriendshipStatus {
   BLOCKED
 }
 
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique // Her kullanıcının tek bir aktif sepeti olabilir
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // İlişkiler
+  user  User       @relation(fields: [userId], references: [id])
+  items GameItem[] // Sepetteki oyunlar
+
+  @@map("cart")
+}
+
+model GameItem {
+  id      Int      @id @default(autoincrement())
+  cartId  Int // Hangi sepete ait
+  gameId  Int // Hangi oyun
+  addedAt DateTime @default(now())
+
+  // İlişkiler
+  cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([cartId, gameId]) // Bir sepette aynı oyundan sadece bir tane olabilir
+  @@map("cart_items")
+}
+
 /**
  * front
  * email
  * form validation req query library
  * cron
  * validation middleware var 2 param(query,body) zod schema al,
+ * typebox
+ * prismabox
  */
 
 //sepet email ile giriş ve bildirim

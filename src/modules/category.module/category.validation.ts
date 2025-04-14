@@ -13,12 +13,20 @@ export const categoryCreateSchema = z.object({
 
 export const categoryUpdateSchema = categoryCreateSchema
   .partial()
-  .refine((data) => Object.keys(data).length === 0, {
+  .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
   });
 
 export const categoryIdSchema = z.object({
-  id: z.string(),
+  id: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "ID must be a positive number",
+  }),
+});
+
+export const gameIdSchema = z.object({
+  gameId: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Game ID must be a positive number",
+  }),
 });
 
 export type CategoryCreateType = z.infer<typeof categoryCreateSchema>;

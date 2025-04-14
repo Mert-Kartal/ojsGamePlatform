@@ -5,13 +5,26 @@ import { validator } from "src/middleware/validator.middleware";
 import {
   categoryCreateSchema,
   categoryUpdateSchema,
+  categoryIdSchema,
+  gameIdSchema,
 } from "src/modules/category.module/category.validation";
+import { z } from "zod";
 
 const router = Router();
 
+// Create combined schema for routes with both category and game IDs
+const categoryAndGameIdSchema = z.object({
+  id: categoryIdSchema.shape.id,
+  gameId: gameIdSchema.shape.gameId,
+});
+
 // Public routes
 router.get("/", CategoryController.listAll);
-router.get("/:id", CategoryController.listById);
+router.get(
+  "/:id",
+  validator({ params: categoryIdSchema }),
+  CategoryController.listById
+);
 
 // Admin only routes
 router.use("/admin", AuthMiddleware.authenticate, AuthMiddleware.isAdmin);
@@ -22,13 +35,22 @@ router.post(
 );
 router.patch(
   "/admin/:id",
-  validator({ body: categoryUpdateSchema }),
+  validator({ params: categoryIdSchema, body: categoryUpdateSchema }),
   CategoryController.editCategory
 );
-router.delete("/admin/:id", CategoryController.deleteCategory);
-router.post("/admin/:id/game/:gameId", CategoryController.addGameToCategory);
+router.delete(
+  "/admin/:id",
+  validator({ params: categoryIdSchema }),
+  CategoryController.deleteCategory
+);
+router.post(
+  "/admin/:id/game/:gameId",
+  validator({ params: categoryAndGameIdSchema }),
+  CategoryController.addGameToCategory
+);
 router.delete(
   "/admin/:id/game/:gameId",
+  validator({ params: categoryAndGameIdSchema }),
   CategoryController.removeGameFromCategory
 );
 

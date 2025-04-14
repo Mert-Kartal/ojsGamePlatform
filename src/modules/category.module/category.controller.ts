@@ -1,12 +1,6 @@
 import { Request, Response } from "express";
 import CategoryModel from "./category.model";
-import {
-  categoryCreateSchema,
-  categoryUpdateSchema,
-  categoryIdSchema,
-  CategoryCreateType,
-} from "src/modules/category.module/category.validation";
-import { ZodError } from "zod";
+import { CategoryCreateType } from "src/modules/category.module/category.validation";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export default class CategoryController {
@@ -15,10 +9,6 @@ export default class CategoryController {
       const createdCategory = await CategoryModel.create(req.body);
       res.status(201).json(createdCategory);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "Category name already exists") {
           res.status(409).json({ error: error.message });
@@ -50,11 +40,8 @@ export default class CategoryController {
 
   static async listById(req: Request<{ id: string }>, res: Response) {
     try {
-      const { id } = categoryIdSchema.parse({ id: req.params.id });
-      if (!id || id === ":id" || isNaN(+id)) {
-        res.status(400).json({ error: "id required" });
-        return;
-      }
+      const id = req.params.id;
+
       const category = await CategoryModel.getById(+id);
 
       if (!category) {
@@ -64,10 +51,6 @@ export default class CategoryController {
 
       res.status(200).json(category);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       console.error("Get category by id error:", error);
       res
         .status(500)
@@ -80,11 +63,7 @@ export default class CategoryController {
     res: Response
   ) {
     try {
-      const { id } = categoryIdSchema.parse({ id: req.params.id });
-      if (!id || id === ":id") {
-        res.status(400).json({ error: "id required" });
-        return;
-      }
+      const id = req.params.id;
 
       const updatedCategory = await CategoryModel.update(+id, req.body);
       if (!updatedCategory) {
@@ -94,10 +73,6 @@ export default class CategoryController {
 
       res.status(200).json(updatedCategory);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "Category name already exists") {
           res.status(409).json({ error: error.message });
@@ -119,11 +94,8 @@ export default class CategoryController {
 
   static async deleteCategory(req: Request<{ id: string }>, res: Response) {
     try {
-      const { id } = categoryIdSchema.parse({ id: req.params.id });
-      if (!id || id === ":id") {
-        res.status(400).json({ error: "id required" });
-        return;
-      }
+      const id = req.params.id;
+
       const deletedCategory = await CategoryModel.delete(+id);
 
       if (!deletedCategory) {
@@ -135,10 +107,6 @@ export default class CategoryController {
         .status(200)
         .json({ message: "Category deleted successfully", deletedCategory });
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "Cannot delete category with associated games") {
           res.status(409).json({ error: error.message });
@@ -164,25 +132,12 @@ export default class CategoryController {
     res: Response
   ) {
     try {
-      const { id } = categoryIdSchema.parse({ id: req.params.id });
-      if (!id || id === ":id") {
-        res.status(400).json({ error: "id required" });
-        return;
-      }
-      const { gameId } = req.params;
-
-      if (!gameId || gameId === ":gameId" || isNaN(+gameId)) {
-        res.status(400).json({ error: "Game ID is required" });
-        return;
-      }
+      const id = req.params.id;
+      const gameId = req.params.gameId;
 
       const result = await CategoryModel.addGameToCategory(+id, +gameId);
       res.status(201).json(result);
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof Error) {
         if (error.message === "Game is already in this category") {
           res.status(409).json({ error: error.message });
@@ -221,27 +176,14 @@ export default class CategoryController {
     res: Response
   ) {
     try {
-      const { id } = categoryIdSchema.parse({ id: req.params.id });
-      if (!id || id === ":id" || isNaN(+id)) {
-        res.status(400).json({ error: "id required" });
-        return;
-      }
-      const { gameId } = req.params;
-
-      if (!gameId || gameId === ":gameId" || isNaN(+gameId)) {
-        res.status(400).json({ error: "Game ID is required" });
-        return;
-      }
+      const id = req.params.id;
+      const gameId = req.params.gameId;
 
       const result = await CategoryModel.removeGameFromCategory(+id, +gameId);
       res
         .status(200)
         .json({ message: "Game removed from category successfully", result });
     } catch (error) {
-      if (error instanceof ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res
@@ -250,6 +192,7 @@ export default class CategoryController {
           return;
         }
       }
+
       console.error("Remove game from category error:", error);
       res.status(500).json({
         error: "Something went wrong while removing game from category",
