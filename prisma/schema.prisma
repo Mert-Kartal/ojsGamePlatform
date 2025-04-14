@@ -148,7 +148,7 @@ model Cart {
   user  User       @relation(fields: [userId], references: [id])
   items GameItem[] // Sepetteki oyunlar
 
-  @@map("cart")
+  @@map("carts")
 }
 
 model GameItem {

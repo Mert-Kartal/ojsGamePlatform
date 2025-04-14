@@ -8,6 +8,7 @@ import wishlistRouter from "./modules/wishlist.module/wishlist.route";
 import libraryRouter from "./modules/library.module/library.route";
 import reviewRouter from "./modules/review.module/review.route";
 import friendshipRouter from "./modules/friendship.module/friendship.route";
+import cartRouter from "./modules/cart.module/cart.route";
 
 const app = express();
 app.use(express.json());
@@ -26,5 +27,6 @@ app.use("/api/wishlist", wishlistRouter);
 app.use("/api/library", libraryRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/friendships", friendshipRouter);
+app.use("/api/cart", cartRouter);
 
 app.listen(PORT, () => console.log(`Server is working on port ${PORT}!`));
