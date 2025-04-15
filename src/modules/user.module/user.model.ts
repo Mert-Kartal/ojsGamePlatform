@@ -126,6 +126,7 @@ export default class UserModel {
       email?: string;
       name?: string;
       profileImage?: string;
+      isAdmin?: boolean;
     }
   ) {
     try {

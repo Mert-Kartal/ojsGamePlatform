@@ -239,10 +239,50 @@ export default class UserController {
         return;
       }
 
-      const profileImage = `/uploads/profiles/${req.file.filename}`;
+      // Uploads klasörlerini kontrol et ve oluştur
+      const publicDir = path.join(process.cwd(), "public");
+      const uploadsDir = path.join(publicDir, "uploads");
+      const profilesDir = path.join(uploadsDir, "profile_photos");
+
+      console.log("Creating directories if not exist:");
+      console.log("Public dir:", publicDir);
+      console.log("Uploads dir:", uploadsDir);
+      console.log("Profiles dir:", profilesDir);
+
+      // Klasörleri oluştur
+      [publicDir, uploadsDir, profilesDir].forEach((dir) => {
+        if (!fs.existsSync(dir)) {
+          console.log("Creating directory:", dir);
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      });
+
+      // Eski profil fotoğrafını sil
+      if (user.profileImage) {
+        const oldImagePath = path.join(publicDir, user.profileImage);
+        try {
+          if (fs.existsSync(oldImagePath)) {
+            console.log("Deleting old profile photo:", oldImagePath);
+            fs.unlinkSync(oldImagePath);
+          }
+        } catch (err) {
+          console.error("Error deleting old profile photo:", err);
+        }
+      }
+
+      console.log("Uploaded file:", req.file);
+
+      // Yeni profil fotoğrafını kaydet
+      const profileImage = `/uploads/profile_photos/${req.file.filename}`;
+      console.log("New profile image path:", profileImage);
+
       await UserModel.update(userId, { profileImage });
 
-      res.json({ success: true, profileImage });
+      res.json({
+        success: true,
+        profileImage,
+        message: "Profile photo uploaded successfully",
+      });
     } catch (error) {
       console.error("Error uploading profile photo:", error);
       res.status(500).json({ error: "Error uploading profile photo" });
@@ -263,17 +303,23 @@ export default class UserController {
         return;
       }
 
-      const imagePath = path.join(
-        __dirname,
-        "../../../public",
-        user.profileImage
-      );
+      console.log("User profile image path:", user.profileImage);
 
+      // Profil fotoğrafı yolunu oluştur
+      const imagePath = path.join(process.cwd(), "public", user.profileImage);
+      console.log("Full image path:", imagePath);
+      console.log("File exists:", fs.existsSync(imagePath));
+
+      // Dosyanın varlığını kontrol et
       if (!fs.existsSync(imagePath)) {
+        console.log("File not found at path:", imagePath);
+        // Dosya yoksa veritabanından profil fotoğrafı referansını temizle
+        await UserModel.update(userId, { profileImage: undefined });
         res.status(404).json({ error: "Profile photo file not found" });
         return;
       }
 
+      // Dosyayı gönder
       res.sendFile(imagePath);
     } catch (error) {
       console.error("Error getting profile photo:", error);

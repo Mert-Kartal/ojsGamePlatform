@@ -10,13 +10,13 @@ const makeUploadFolder = (folderPath: string) => {
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let folder = "uploads/general";
+    let folder = path.join("public", "uploads", "general");
 
     // farklı alanlara göre farklı klasörlere kaydet
     if (file.fieldname === "profilePhoto") {
-      folder = "uploads/profile_photos";
+      folder = path.join("public", "uploads", "profile_photos");
     } else if (file.fieldname === "coverPhoto") {
-      folder = "uploads/game_covers";
+      folder = path.join("public", "uploads", "game_covers");
     }
 
     makeUploadFolder(folder);

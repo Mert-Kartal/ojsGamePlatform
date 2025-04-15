@@ -185,10 +185,30 @@ export default class GameController {
         return;
       }
 
-      const coverImage = `/uploads/games/${req.file.filename}`;
+      // Eski cover image'ı sil
+      if (game.coverImage) {
+        const oldImagePath = path.join(
+          process.cwd(),
+          "public",
+          game.coverImage
+        );
+        try {
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        } catch (err) {
+          console.error("Error deleting old cover image:", err);
+        }
+      }
+
+      const coverImage = `/uploads/game_covers/${req.file.filename}`;
       await GameModel.update(gameId, { coverImage });
 
-      res.json({ success: true, coverImage });
+      res.json({
+        success: true,
+        coverImage,
+        message: "Cover image uploaded successfully",
+      });
     } catch (error) {
       console.error("Error uploading cover image:", error);
       res.status(500).json({ error: "Error uploading cover image" });
@@ -205,13 +225,12 @@ export default class GameController {
         return;
       }
 
-      const imagePath = path.join(
-        __dirname,
-        "../../../public",
-        game.coverImage
-      );
+      // Doğru yolu oluştur
+      const imagePath = path.join(process.cwd(), "public", game.coverImage);
 
       if (!fs.existsSync(imagePath)) {
+        // Dosya yoksa veritabanından referansı temizle
+        await GameModel.update(gameId, { coverImage: undefined });
         res.status(404).json({ error: "Cover image file not found" });
         return;
       }
@@ -233,19 +252,25 @@ export default class GameController {
         return;
       }
 
-      const imagePath = path.join(
-        __dirname,
-        "../../../public",
-        game.coverImage
-      );
+      // Doğru yolu oluştur
+      const imagePath = path.join(process.cwd(), "public", game.coverImage);
 
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+      try {
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      } catch (err) {
+        console.error("Error deleting cover image file:", err);
+        res.status(500).json({ error: "Error deleting cover image file" });
+        return;
       }
 
       await GameModel.update(gameId, { coverImage: undefined });
 
-      res.json({ success: true, message: "Cover image deleted successfully" });
+      res.json({
+        success: true,
+        message: "Cover image deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting cover image:", error);
       res.status(500).json({ error: "Error deleting cover image" });
