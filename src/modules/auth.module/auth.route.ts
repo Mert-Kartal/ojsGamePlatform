@@ -9,8 +9,23 @@ import {
   resetPasswordSchema,
   tokenSchema,
 } from "./auth.validation";
+import EmailService from "../../services/email.service";
 
 const router = Router();
+
+// Test route for email service (remove in production)
+router.get("/test-email", async (req, res) => {
+  try {
+    await EmailService.testConnection();
+    res.json({
+      message: "Email test completed. Check server logs for details.",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ error: "Email test failed. Check server logs for details." });
+  }
+});
 
 // Public routes
 router.post(
