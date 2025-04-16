@@ -66,6 +66,7 @@ export default class UserModel {
         isAdmin: true,
         createdAt: true,
         updatedAt: true,
+        emailVerified: true,
         library: {
           include: {
             game: true,
@@ -199,5 +200,84 @@ export default class UserModel {
       console.error("Toggle admin status error:", error);
       throw error;
     }
+  }
+
+  static async findByEmailVerifyToken(token: string) {
+    return await prisma.user.findUnique({
+      where: {
+        emailVerifyToken: token,
+      },
+    });
+  }
+
+  static async findByResetToken(token: string) {
+    return await prisma.user.findUnique({
+      where: {
+        resetToken: token,
+      },
+    });
+  }
+
+  static async getByEmail(email: string) {
+    return await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+  }
+
+  static async verifyEmail(userId: number) {
+    return await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        emailVerified: true,
+        emailVerifyToken: null,
+        emailVerifyExpires: null,
+      },
+    });
+  }
+
+  static async setEmailVerifyToken(
+    userId: number,
+    token: string,
+    expires: Date
+  ) {
+    return await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        emailVerifyToken: token,
+        emailVerifyExpires: expires,
+      },
+    });
+  }
+
+  static async setResetToken(userId: number, token: string, expires: Date) {
+    return await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        resetToken: token,
+        resetTokenExpires: expires,
+      },
+    });
+  }
+
+  static async updatePassword(userId: number, newPassword: string) {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    return await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null,
+      },
+    });
   }
 }

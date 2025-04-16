@@ -1,16 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import {
-  tokenSchema,
-  registerSchema,
-  loginSchema,
-} from "src/modules/auth.module/auth.validation";
+import { tokenSchema } from "../modules/auth.module/auth.validation";
 import { ZodError } from "zod";
-import UserModel from "src/modules/user.module/user.model";
+import UserModel from "../modules/user.module/user.model";
 
 dotenv.config();
-const jwtSecret = process.env.JWT_SECRET!;
+const jwtSecret = process.env.JWT_SECRET
+  ? process.env.JWT_SECRET
+  : "secret_key";
 
 interface JwtPayload {
   userId: number;
@@ -18,35 +16,9 @@ interface JwtPayload {
   exp: number;
 }
 
-interface AuthRequest extends Request {
-  user?: {
-    id: number;
-  };
-}
+import AuthRequest from "src/types/auth.types";
 
 export default class AuthMiddleware {
-  static validateRegister(req: Request, res: Response, next: NextFunction) {
-    const result = registerSchema.safeParse(req.body);
-
-    if (!result.success) {
-      res.status(400).json({ error: result.error.format() });
-      return;
-    }
-
-    next();
-  }
-
-  static validateLogin(req: Request, res: Response, next: NextFunction) {
-    const result = loginSchema.safeParse(req.body);
-
-    if (!result.success) {
-      res.status(400).json({ error: result.error.format() });
-      return;
-    }
-
-    next();
-  }
-
   static async authenticate(
     req: AuthRequest,
     res: Response,
