@@ -9,6 +9,9 @@ import libraryRouter from "./modules/library.module/library.route";
 import reviewRouter from "./modules/review.module/review.route";
 import friendshipRouter from "./modules/friendship.module/friendship.route";
 import cartRouter from "./modules/cart.module/cart.route";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(express.json());
