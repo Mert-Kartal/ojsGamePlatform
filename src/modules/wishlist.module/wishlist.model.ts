@@ -110,4 +110,21 @@ export default class WishlistModel {
       },
     });
   }
+
+  static async getUsersWithGame(gameId: number) {
+    return await prisma.wishlist.findMany({
+      where: {
+        gameId,
+      },
+      select: {
+        userId: true,
+        user: {
+          select: {
+            username: true,
+            email: true,
+          },
+        },
+      },
+    });
+  }
 }

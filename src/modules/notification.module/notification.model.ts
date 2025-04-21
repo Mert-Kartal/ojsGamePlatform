@@ -87,6 +87,23 @@ export default class NotificationModel {
     });
   }
 
+  static async createMany(
+    notifications: {
+      userId: number;
+      title: string;
+      message: string;
+      type: NotificationType;
+      metadata?: NotificationMetadata;
+    }[]
+  ) {
+    return await prisma.notification.createMany({
+      data: notifications.map((notification) => ({
+        ...notification,
+        metadata: notification.metadata as Prisma.JsonObject,
+      })),
+    });
+  }
+
   static async markAsRead(id: number, userId: number) {
     return await prisma.notification.updateMany({
       where: { id, userId },

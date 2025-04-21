@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import FriendshipModel from "./friendship.model";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import AuthRequest from "src/types/auth.types";
+import { NotificationService } from "../../services/notification.service";
+import UserModel from "../user.module/user.model";
 
 export default class FriendshipController {
   static async getFriends(req: AuthRequest, res: Response) {
@@ -99,6 +101,17 @@ export default class FriendshipController {
       }
 
       const friendship = await FriendshipModel.create(req.user.id, req.body);
+
+      // Get sender user info for notification
+      const sender = await UserModel.getById(req.user.id);
+      if (sender) {
+        // Send notification to target user
+        await NotificationService.sendFriendRequestNotification(
+          req.body.friendId,
+          { id: sender.id, username: sender.username }
+        );
+      }
+
       res.status(201).json(friendship);
     } catch (error) {
       if (error instanceof Error) {
@@ -131,6 +144,19 @@ export default class FriendshipController {
         req.user.id,
         req.body
       );
+
+      // If friendship is accepted, send notification
+      if (req.body.status === "ACCEPTED") {
+        const accepter = await UserModel.getById(req.user.id);
+        if (accepter) {
+          await NotificationService.sendFriendRequestAcceptedNotification(
+            friendship.userId, // Send to the original requester
+            { id: accepter.id, username: accepter.username },
+            friendship.id
+          );
+        }
+      }
+
       res.status(200).json(friendship);
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
