@@ -9,6 +9,7 @@ import libraryRouter from "./modules/library.module/library.route";
 import reviewRouter from "./modules/review.module/review.route";
 import friendshipRouter from "./modules/friendship.module/friendship.route";
 import cartRouter from "./modules/cart.module/cart.route";
+import notificationRouter from "./modules/notification.module/notification.route";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -31,5 +32,6 @@ app.use("/api/library", libraryRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/friendships", friendshipRouter);
 app.use("/api/cart", cartRouter);
+app.use("/api/notifications", notificationRouter);
 
 app.listen(PORT, () => console.log(`Server is working on port ${PORT}!`));

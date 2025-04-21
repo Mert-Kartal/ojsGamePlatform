@@ -12,21 +12,22 @@ datasource db {
 
 // Kullanıcı modeli
 model User {
-  id                 Int       @id @default(autoincrement())
-  username           String    @unique
-  email              String    @unique
+  id                 Int            @id @default(autoincrement())
+  username           String         @unique
+  email              String         @unique
   password           String
   name               String?
   profileImage       String?
-  isAdmin            Boolean   @default(false)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  isAdmin            Boolean        @default(false)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   deletedAt          DateTime?
-  emailVerified      Boolean   @default(false)
-  emailVerifyToken   String?   @unique
+  emailVerified      Boolean        @default(false)
+  emailVerifyToken   String?        @unique
   emailVerifyExpires DateTime?
-  resetToken         String?   @unique
+  resetToken         String?        @unique
   resetTokenExpires  DateTime?
+  notifications      Notification[]
 
   // İlişkiler
   library   Library[]
@@ -168,6 +169,32 @@ model GameItem {
 
   @@unique([cartId, gameId]) // Bir sepette aynı oyundan sadece bir tane olabilir
   @@map("cart_items")
+}
+
+// Bildirim tipleri için enum
+enum NotificationType {
+  FRIEND_REQUEST // Arkadaşlık isteği alındığında
+  FRIEND_ACCEPT // Arkadaşlık isteği kabul edildiğinde
+  GAME_SALE // İstek listesindeki bir oyun indirime girdiğinde
+  SYSTEM_MESSAGE // Sistem bildirimleri için
+}
+
+// Bildirim modeli
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  metadata  Json?
+
+  // İlişkiler
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 /**
