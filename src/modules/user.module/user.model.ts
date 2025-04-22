@@ -203,11 +203,41 @@ export default class UserModel {
   }
 
   static async findByEmailVerifyToken(token: string) {
-    return await prisma.user.findUnique({
+    console.log("Searching for token in database:", token);
+
+    // Try finding all users with their tokens
+    const allUsers = await prisma.user.findMany({
+      where: {
+        emailVerifyToken: {
+          not: null,
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        emailVerifyToken: true,
+        emailVerifyExpires: true,
+        emailVerified: true,
+      },
+    });
+    console.log("All users with tokens:", allUsers);
+
+    // Try finding with exact token
+    const user = await prisma.user.findFirst({
       where: {
         emailVerifyToken: token,
       },
+      select: {
+        id: true,
+        email: true,
+        emailVerifyToken: true,
+        emailVerifyExpires: true,
+        emailVerified: true,
+      },
     });
+
+    console.log("Found user with findFirst:", user);
+    return user;
   }
 
   static async findByResetToken(token: string) {
@@ -244,15 +274,25 @@ export default class UserModel {
     token: string,
     expires: Date
   ) {
-    return await prisma.user.update({
+    console.log("Setting email verify token:", { userId, token, expires });
+    // Clean the token before saving
+    const cleanToken = token.trim();
+    const result = await prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        emailVerifyToken: token,
+        emailVerifyToken: cleanToken,
         emailVerifyExpires: expires,
       },
+      select: {
+        id: true,
+        emailVerifyToken: true,
+        emailVerifyExpires: true,
+      },
     });
+    console.log("Token update result:", result);
+    return result;
   }
 
   static async setResetToken(userId: number, token: string, expires: Date) {

@@ -161,7 +161,7 @@ class EmailService {
       return false;
     }
 
-    const verificationUrl = `${process.env.APP_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${process.env.APP_URL}/auth/verify-email/${verificationToken}`;
     const html = `
       <h1>Welcome to Our Game Platform!</h1>
       <p>Hi ${username},</p>
@@ -194,7 +194,7 @@ class EmailService {
       return false;
     }
 
-    const verificationUrl = `${process.env.APP_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${process.env.APP_URL}/auth/verify-email/${verificationToken}`;
     const html = `
       <h1>Email Verification</h1>
       <p>Hi ${username},</p>

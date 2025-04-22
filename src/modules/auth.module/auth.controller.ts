@@ -41,11 +41,15 @@ export default class AuthController {
         name,
       });
 
+      console.log("Generated token:", emailVerifyToken);
+
       await UserModel.setEmailVerifyToken(
         user.id,
         emailVerifyToken,
         emailVerifyExpires
       );
+
+      console.log("Token saved for user:", user.id);
 
       await EmailService.sendWelcomeEmail(email, username, emailVerifyToken);
 
@@ -76,8 +80,13 @@ export default class AuthController {
   static async verifyEmail(req: Request, res: Response) {
     try {
       const { token } = req.params;
+      // Trim the token to remove any whitespace or newline characters
+      const cleanToken = token.trim();
+      console.log("Raw token from params:", token);
+      console.log("Cleaned token:", cleanToken);
 
-      const user = await UserModel.findByEmailVerifyToken(token);
+      const user = await UserModel.findByEmailVerifyToken(cleanToken);
+      console.log("Found user:", user ? user.id : "No user found");
       if (!user) {
         res
           .status(400)
